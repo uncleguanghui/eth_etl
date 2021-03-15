@@ -8,7 +8,7 @@ import os
 import time
 import logging
 import pandas as pd
-from util import Web3, get_function_sighashes, is_erc20_contract, is_erc721_contract, to_normalized_address
+from util import Web3, get_function_sighashes, is_erc20_contract, is_erc721_contract, to_normalized_address, get_receipt
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s')
@@ -70,8 +70,8 @@ def export(web3, start, end, batch, output, continue_=False, waiting=False):
 
         # 获取 transactions ID 和 receipts
         blocks = [web3.eth.get_block(i) for i in range(start_block, end_block + 1)]
-        transaction_ids = sum([[i.hex() for i in i.transactions] for i in blocks], [])
-        receipts = [web3.eth.getTransactionReceipt(i) for i in transaction_ids]
+        transaction_hashes = sum([[i.hex() for i in i.transactions] for i in blocks], [])
+        receipts = [get_receipt(web3, i) for i in transaction_hashes]
 
         # 保存 receipts
         data_receipts = [receipt_to_dict(i) for i in receipts]

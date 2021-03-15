@@ -29,23 +29,22 @@ class Web3:
         self.update()
 
     def update(self):
-        success = False
         max_retry_count = 10
         retry_count = 0
+        error_info = ''
         while retry_count < max_retry_count:
             try:
                 self.w3 = web3.Web3(web3.Web3.IPCProvider(self.ipc, timeout=60))
                 self.w3.middleware_onion.inject(geth_poa_middleware, layer=0)  # 注入 poa 兼容中间件到最内层
                 assert self.w3.isConnected()
-                success = True
-                break
+                return
             except (Exception, AssertionError) as err:
                 retry_count += 1
                 logger.warning(f'Web3 初始化失败 {retry_count} 次：{str(err)}')
+                error_info = str(err)
                 time.sleep(60)
 
-        if not success:
-            raise ValueError(f'Web3 初始化尝试次数超过最大重试次数 {max_retry_count}')
+        raise ValueError(f'Web3 初始化尝试次数超过最大重试次数 {max_retry_count}。' + error_info)
 
     @property
     def eth(self):
@@ -70,9 +69,8 @@ def word_to_address(param):
 
 
 def get_logs(w3, start, end):
-    try_max_cnt = 10
+    try_max_cnt = 30
     try_index = 0
-    wait_seconds = 1  # 等待时长
     error_info = ''
     while try_index < try_max_cnt:
         try:
@@ -83,8 +81,23 @@ def get_logs(w3, start, end):
         except Exception as err:
             try_index += 1
             error_info = str(err)
-            time.sleep(wait_seconds)
+            time.sleep(3)
     raise ValueError(f'在 {start}-{end} 获取 logs 失败，超过最大尝试次数 {try_max_cnt}。' + error_info)
+
+
+def get_receipt(w3, tx_hash):
+    max_retry_count = 30
+    retry_count = 0
+    error_info = ''
+    while retry_count < max_retry_count:
+        try:
+            return w3.eth.getTransactionReceipt(tx_hash)
+        except (Exception, AssertionError) as err:
+            retry_count += 1
+            error_info = str(err)
+            time.sleep(3)
+
+    raise ValueError(f'获取 receipt 失败次数超过最大重试次数 {max_retry_count}。' + error_info)
 
 
 def call_contract_function2(func, ignore_errors, default_value=None):
