@@ -8,7 +8,7 @@ import os
 import time
 import logging
 import pandas as pd
-from util import Web3
+from util import Web3, to_normalized_address
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s')
@@ -45,8 +45,8 @@ def tx_to_dict(transaction, block_timestamp):
         'block_hash': transaction.get('blockHash').hex(),
         'block_number': transaction.get('blockNumber'),
         'transaction_index': transaction.get('transactionIndex'),
-        'from_address': transaction.get('from'),
-        'to_address': transaction.get('to'),
+        'from_address': to_normalized_address(transaction.get('from')),
+        'to_address': to_normalized_address(transaction.get('to')),
         'value': transaction.get('value'),
         'gas': transaction.get('gas'),
         'gas_price': transaction.get('gasPrice'),

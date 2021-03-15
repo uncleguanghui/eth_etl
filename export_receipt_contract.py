@@ -8,7 +8,7 @@ import os
 import time
 import logging
 import pandas as pd
-from util import Web3, get_function_sighashes, is_erc20_contract, is_erc721_contract
+from util import Web3, get_function_sighashes, is_erc20_contract, is_erc721_contract, to_normalized_address
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s')
@@ -19,12 +19,12 @@ def receipt_to_dict(receipt):
     return {
         'transaction_hash': receipt.get('transactionHash').hex(),
         'transaction_index': receipt.get('transactionIndex'),
-        'block_hash': receipt.get('blockNumber'),
+        'block_hash': receipt.get('blockHash').hex(),
         'block_number': receipt.get('blockNumber'),
-        'cumulative_gas_used': receipt.get('cumulativeGasUsed'),  #
-        'gas_used': receipt.get('gasUsed'),  #
-        'contract_address': receipt.get('contractAddress'),  # ?
-        'root': receipt.get('root'),  # ?
+        'cumulative_gas_used': receipt.get('cumulativeGasUsed'),
+        'gas_used': receipt.get('gasUsed'),
+        'contract_address': to_normalized_address(receipt.get('contractAddress')),
+        'root': receipt.get('root'),
         'status': receipt.get('status'),
     }
 
@@ -33,7 +33,7 @@ def contract_to_dict(web3, contract_addr, block_number):
     bytecode = web3.eth.get_code(contract_addr).hex()
     function_sighashes = get_function_sighashes(bytecode)
     return {
-        'address': contract_addr,
+        'address': to_normalized_address(contract_addr),
         'bytecode': bytecode,
         'function_sighashes': ','.join(function_sighashes),
         'is_erc20': is_erc20_contract(function_sighashes),

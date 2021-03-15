@@ -8,7 +8,7 @@ import os
 import time
 import logging
 import pandas as pd
-from util import Web3, TOPIC_TRANSFER, get_logs
+from util import Web3, TOPIC_TRANSFER, get_logs, word_to_address, to_normalized_address
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s')
@@ -22,7 +22,7 @@ def log_to_dict(log):
         'transaction_index': log.get('transactionIndex'),
         'block_hash': log.get('blockHash').hex(),
         'block_number': log.get('blockNumber'),
-        'address': log.get('address'),
+        'address': to_normalized_address(log.get('address')),
         'data': log.get('data'),
         'topics': ','.join([i.hex() for i in log.get('topics')])
     }
@@ -30,9 +30,9 @@ def log_to_dict(log):
 
 def transfer_to_dict(transfer):
     return {
-        'token_address': transfer.get('address'),
-        'from_address': transfer.get('topics')[1].hex(),
-        'to_address': transfer.get('topics')[2].hex(),
+        'token_address': to_normalized_address(transfer.get('address')),
+        'from_address': word_to_address(transfer.get('topics')[1].hex()),
+        'to_address': word_to_address(transfer.get('topics')[2].hex()),
         'value': int(transfer.get('data'), 16) if transfer.get('data') != '0x' else 0,
         'transaction_hash': transfer.get('transactionHash').hex(),
         'log_index': transfer.get('logIndex'),

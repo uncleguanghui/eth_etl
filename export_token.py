@@ -8,7 +8,7 @@ import os
 import time
 import logging
 import pandas as pd
-from util import Web3, get_first_result, ERC20_ABI, TOPIC_TRANSFER, get_logs
+from util import Web3, get_first_result, ERC20_ABI, TOPIC_TRANSFER, get_logs, to_normalized_address
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s')
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 def token_to_dict(web3, token_addr, block_number=None):
     contract = web3.eth.contract(token_addr, abi=ERC20_ABI)
     return {
-        'address': token_addr,
+        'address': to_normalized_address(token_addr),
         'symbol': get_first_result(contract.functions.symbol(), contract.functions.SYMBOL()),
         'name': get_first_result(contract.functions.name(), contract.functions.NAME()),
         'decimals': get_first_result(contract.functions.decimals(), contract.functions.DECIMALS()),

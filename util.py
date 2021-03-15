@@ -54,6 +54,21 @@ class Web3:
         return self.w3.eth
 
 
+def to_normalized_address(address):
+    if address is None or not isinstance(address, str):
+        return address
+    return address.lower()
+
+
+def word_to_address(param):
+    if param is None:
+        return None
+    elif len(param) >= 40:
+        return to_normalized_address('0x' + param[-40:])
+    else:
+        return to_normalized_address(param)
+
+
 def get_logs(w3, start, end):
     try_max_cnt = 10
     try_index = 0
@@ -424,3 +439,11 @@ ERC20_ABI = json.loads('''
     }
 ]
 ''')
+
+if __name__ == '__main__':
+    # import web3
+
+    # w3 = web3.Web3(web3.Web3.IPCProvider('/opt/bsc/build/bin/node/geth.ipc', timeout=60))
+    # w3.middleware_onion.inject(geth_poa_middleware, layer=0)  # 注入 poa 兼容中间件到最内层
+    # w3.isConnected()
+    pass
