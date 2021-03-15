@@ -1,0 +1,5 @@
+ethereum_dasm>=0.1.5
+pandas>=1.2.0
+eth_utils>=1.10.0
+pyetherchain>=0.3.2
+web3>=5.17.0
