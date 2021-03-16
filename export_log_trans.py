@@ -31,8 +31,8 @@ def log_to_dict(log):
 def transfer_to_dict(transfer):
     return {
         'token_address': to_normalized_address(transfer.get('address')),
-        'from_address': word_to_address(transfer.get('topics')[1].hex()),
-        'to_address': word_to_address(transfer.get('topics')[2].hex()),
+        'from_address': word_to_address(transfer.get('topics')[1].hex()) if len(transfer.get('topics')) > 1 else None,
+        'to_address': word_to_address(transfer.get('topics')[2].hex()) if len(transfer.get('topics')) > 2 else None,
         'value': int(transfer.get('data'), 16) if transfer.get('data') != '0x' else 0,
         'transaction_hash': transfer.get('transactionHash').hex(),
         'log_index': transfer.get('logIndex'),
