@@ -1,8 +1,9 @@
 # 以太坊 ETL 脚本
 
 本脚本在 ethereum-etl 模块的基础上，做了以下改进：
-1. 增加了 `-c` 参数，不再重复处理已经处理过的数据；
-2. 增加了 `-w` 参数，当最新区块高度没达到期望处理的区块高度（如99999999）时，会等待，直到处理完指定的区块；
+1. 新增配置文件，提供了一些进阶参数：
+    * 增加了 `continue` 参数，不再重复处理已经处理过的数据；
+    * 增加了 `waiting` 参数，当最新区块高度没达到期望处理的区块高度（如99999999）时，会等待，直到处理完指定的区块；
 3. 简化模块，聚焦于 ETL 功能，去掉了很多关系不大的模块，便于后续的升级和维护。
 
 ##  快速开始
@@ -54,15 +55,12 @@ pip install -r requirements.txt
 1、 输出 blocks 和 transactions
 
 ```bash
-python export_block_tx.py -s 0 -e 99 -b 10 -p <geth.ipc路径>geth.ipc -o ./output
+python export_block_tx.py -s 0 -e 99
 ```
 
 解释一下参数：
 * `-s` `--start`：开始区块高度
 * `-e` `--end`：结束区块高度
-* `-b` `--batch`：输出到一个文件中的区块数
-* `-p` `--ipc`：本地 geth.ipc 文件路径
-* `-o` `--output`：输出结果目录
 
 运行完成后，会在当前目录看到 output 文件夹，在 output 文件夹下会有两个文件夹，分别是 blocks 和 transactions。
 
@@ -75,31 +73,23 @@ hive 建表语句见本项目的 hive 文件夹。
 2、 输出 blocks 和 token_transactions
 
 ```bash
-python export_log_trans.py -s 0 -e 99 -b 10 -p <geth.ipc路径>geth.ipc -o ./output
+python export_log_trans.py -s 0 -e 99
 ```
 
 3、 输出 receipts 和 contracts
 
 ```bash
-python export_receipt_contract.py -s 0 -e 99 -b 10 -p <geth.ipc路径>geth.ipc -o ./output
+python export_receipt_contract.py -s 0 -e 99
 ```
 
 4、 输出 tokens
 
 ```bash
-python export_token.py -s 0 -e 99 -b 10 -p <geth.ipc路径>geth.ipc -o ./output
+python export_token.py -s 0 -e 99
 ```
 
-## 进阶
-
-脚本提供了其他进阶参数：
-* `-w` `--waiting`：提供`持续等待`功能，当已经处理到最新区块高度时，会一直边等待边处理，直到达到期望的区块高度
-* `-c` `--continue_`：`断点续跑`功能，当发现文件已存在时，不重复处理，适用于跑一半断掉的情况
-
-因此，如果想要让脚本永远跑下去，最省心的命令就是：
+如果想要让脚本永远跑下去，最省心的命令就是：
 
 ```bash
-python export_token.py -s 0 -e 9999999999 -b 1000 -p <geth.ipc路径>geth.ipc -o ./output -c -w
+python export_token.py -s 0 -e 9999999999
 ```
-
-其中，-b 命令指定了每次处理 1000 个区块。

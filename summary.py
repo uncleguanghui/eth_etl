@@ -14,7 +14,7 @@ config = configparser.ConfigParser()
 config.read(path_config)
 path_ipc = config['geth']['ipc']
 assert Path(path_ipc).name == 'geth.ipc', 'geth.ipc 文件名错误'
-assert Path(path_ipc).exist(), f'geth.ipc 文件不存在：{path_ipc}'
+assert Path(path_ipc).exists(), f'geth.ipc 文件不存在：{path_ipc}'
 
 # 连接 web3
 w3 = web3.Web3(web3.Web3.IPCProvider(path_ipc, timeout=10))

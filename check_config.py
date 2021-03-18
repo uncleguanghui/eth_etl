@@ -60,7 +60,7 @@ print_config(conf)
 # 检查 ipc
 path_ipc = conf['ipc']
 assert Path(path_ipc).name == 'geth.ipc', 'config.ini 中的 geth.ipc 文件名错误'
-assert Path(path_ipc).exist(), f'config.ini 中的 geth.ipc 文件不存在：{path_ipc}'
+assert Path(path_ipc).exists(), f'config.ini 中的 geth.ipc 文件不存在：{path_ipc}'
 # 检查 output
 dir_output = Path(conf['output'])
 dir_output = dir_output if dir_output.is_absolute() else (Path(__file__).parent / dir_output)
