@@ -25,7 +25,7 @@ def combine_config(c, a):
         'start': a.start,
         'end': a.end,
         # output
-        'output': c['output']['dir'],
+        'output': c['output']['path'],
         'batch': a.batch or c.getint('output', 'batch'),
         **{key: value for key, value in c['output'].items() if key.startswith('table_name')},
         # action

@@ -39,7 +39,7 @@ def get_max_block_height(path: Path, table_name):
 
 
 # 输出目录的绝对路径
-dir_output = Path(config['output']['dir'])
+dir_output = Path(config['output']['path'])
 dir_output = dir_output if dir_output.is_absolute() else (Path(__file__).parent / dir_output)
 # 遍历
 for key in config['output'].keys():
