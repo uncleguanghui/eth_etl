@@ -10,10 +10,11 @@ from export_log_trans import export as log_trans_export
 from export_receipt_contract import export as receipt_contract_export
 
 if __name__ == '__main__':
-    from init import args
+    from check_config import conf
 
-    w3 = Web3(args.ipc)
-    block_tx_export(w3, args.start, args.end, args.batch, args.output, args.continue_)
-    log_trans_export(w3, args.start, args.end, args.batch, args.output, args.continue_)
-    receipt_contract_export(w3, args.start, args.end, args.batch, args.output, args.continue_)
-    token_export(w3, args.start, args.end, args.batch, args.output, args.continue_)
+    w3 = Web3(conf['ipc'])
+    block_tx_export(w3, conf['start'], conf['end'], conf['batch'], conf['output'], conf['continue'], conf['waiting'])
+    log_trans_export(w3, conf['start'], conf['end'], conf['batch'], conf['output'], conf['continue'], conf['waiting'])
+    receipt_contract_export(w3, conf['start'], conf['end'], conf['batch'], conf['output'], conf['continue'],
+                            conf['waiting'])
+    token_export(w3, conf['start'], conf['end'], conf['batch'], conf['output'], conf['continue'], conf['waiting'])

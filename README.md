@@ -9,7 +9,41 @@
 
 请确保 python 是 3.6+。
 
-先下载依赖：
+先重命名配置文件为 `config.ini`
+
+```bash
+mv config.ini.examplt config.ini
+```
+
+然后修改配置文件内容，一般来说，只需要改 `[geth]` 下的 ipc 即可。
+
+```text
+[geth]
+# geth.ipc 绝对路径
+ipc = /.../geth.ipc
+
+[output]
+# 输出文件的路径（绝对路径或相对路径，可以不用改）
+path = output
+# 7 张表的文件名（不用改）
+table_name_blocks = blocks
+table_name_logs = logs
+table_name_tokens = tokens
+table_name_token_transfers = token_transfers
+table_name_transactions = transactions
+table_name_contracts = contracts
+table_name_receipts = receipts
+# 每个文件包含的区块数（按服务器处理能力来改）
+batch = 100
+
+[action]
+# 是否继续输出（在上一次结果的基础上，可以不用改）
+continue = True
+# 当区块高度没有达到结束高度时，是否等待（可以不用改）
+waiting = True
+```
+
+然后，下载依赖：
 
 ```bash
 pip install -r requirements.txt

@@ -63,7 +63,7 @@ def export(web3, start, end, batch, output, continue_=False, waiting=False):
 
 
 if __name__ == '__main__':
-    from init import args
+    from check_config import conf
 
-    w3 = Web3(args.ipc)
-    export(w3, args.start, args.end, args.batch, args.output, args.continue_, args.waiting)
+    w3 = Web3(conf['ipc'])
+    export(w3, conf['start'], conf['end'], conf['batch'], conf['output'], conf['continue'], conf['waiting'])
