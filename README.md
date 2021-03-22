@@ -13,7 +13,7 @@
 先重命名配置文件为 `config.ini`
 
 ```bash
-mv config.ini.examplt config.ini
+mv config.ini.example config.ini
 ```
 
 然后修改配置文件内容，一般来说，只需要改 `[geth]` 下的 ipc 即可。

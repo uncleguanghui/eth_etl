@@ -108,19 +108,31 @@ def call_contract_function2(func, ignore_errors, default_value=None):
         if type(ex) in ignore_errors:
             print('An exception occurred in function {} of contract {}. '.format(func.fn_name, func.address)
                   + 'This exception can be safely ignored.')
-            return default_value
-        else:
-            raise ex
+        return default_value
+
+
+ASCII_0 = 0
+
+
+def clean_user_provided_content(content):
+    if isinstance(content, str):
+        # This prevents this error in BigQuery
+        # Error while reading data, error message: Error detected while parsing row starting at position: 9999.
+        # Error: Bad character (ASCII 0) encountered.
+        return content.translate({ASCII_0: None})
+    else:
+        return content
 
 
 def call_contract_function1(func):
     # BadFunctionCallOutput exception happens if the token doesn't implement a particular function
     # or was self-destructed
     # OverflowError exception happens if the return type of the function doesn't match the expected type
-    return call_contract_function2(
+    result = call_contract_function2(
         func=func,
         ignore_errors=(BadFunctionCallOutput, OverflowError, ValueError),
         default_value=None)
+    return clean_user_provided_content(result)
 
 
 def get_first_result(*funcs):
