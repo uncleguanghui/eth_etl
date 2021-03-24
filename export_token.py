@@ -41,7 +41,7 @@ def export(web3, start, end, batch, output, continue_=False, waiting=False):
             current_block_index = web3.eth.blockNumber
 
         # 递归创建 tokens 目录
-        dir_tokens = os.path.join(output, 'tokens', f'start={start_block:08d}/end={end_block:08d}')
+        dir_tokens = os.path.join(output, 'tokens', f'start_block={start_block:08d}/end_block={end_block:08d}')
         os.makedirs(dir_tokens, exist_ok=True)
         path_tokens = os.path.join(dir_tokens, f'tokens_{start_block:08d}_{end_block:08d}.csv')
         # 如果设置 continue_=True，且文件都处理过了，则不重复处理
