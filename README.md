@@ -4,6 +4,7 @@
 1. 新增配置文件，提供了一些进阶参数：
     * 增加了 `continue` 参数，不再重复处理已经处理过的数据；
     * 增加了 `waiting` 参数，当最新区块高度没达到期望处理的区块高度（如99999999）时，会等待，直到处理完指定的区块；
+2. 简化了目录结构，即取消了 start_block=xxxx/end_block=xxxx 这两级目录，所有数据文件放在一个目录下。若有分区需求则自建目录吧。
 3. 简化模块，聚焦于 ETL 功能，去掉了很多关系不大的模块，便于后续的升级和维护。
 
 ##  快速开始
@@ -64,11 +65,7 @@ python export_block_tx.py -s 0 -e 99
 
 运行完成后，会在当前目录看到 output 文件夹，在 output 文件夹下会有两个文件夹，分别是 blocks 和 transactions。
 
-每个文件夹下面都有一个 csv 文件，路径是 start_block=aaaaaaaa/end_block=bbbbbbbb/xxx_aaaaaaaa_bbbbbbbb.csv。
-
-这样的文件路径是为了之后 hive 建表更加方便。
-
-hive 建表语句见本项目的 hive 文件夹。
+每个文件夹下面都有若干个 csv 文件，如 blocks_00000000_00000999.csv。
 
 2、 输出 blocks 和 token_transactions
 

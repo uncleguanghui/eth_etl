@@ -69,11 +69,11 @@ def export(web3, start, end, batch, output, continue_=False, waiting=False):
             current_block_index = web3.eth.blockNumber
 
         # 递归创建 blocks 目录
-        dir_blocks = os.path.join(output, 'blocks', f'start_block={start_block:08d}/end_block={end_block:08d}')
+        dir_blocks = os.path.join(output, 'blocks')
         os.makedirs(dir_blocks, exist_ok=True)
         path_blocks = os.path.join(dir_blocks, f'blocks_{start_block:08d}_{end_block:08d}.csv')
         # 递归创建 transactions 目录
-        dir_txs = os.path.join(output, 'transactions', f'start_block={start_block:08d}/end_block={end_block:08d}')
+        dir_txs = os.path.join(output, 'transactions')
         os.makedirs(dir_txs, exist_ok=True)
         path_txs = os.path.join(dir_txs, f'transactions_{start_block:08d}_{end_block:08d}.csv')
         # 如果设置 continue_=True，且文件都处理过了，则不重复处理

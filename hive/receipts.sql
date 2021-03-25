@@ -9,7 +9,7 @@ CREATE EXTERNAL TABLE IF NOT EXISTS receipts (
     root STRING,
     status BIGINT
 )
-PARTITIONED BY (start_block BIGINT, end_block BIGINT)
+PARTITIONED BY (start_block BIGINT)
 ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe'
 WITH SERDEPROPERTIES (
     'serialization.format' = ',',

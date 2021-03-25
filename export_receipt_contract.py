@@ -56,11 +56,11 @@ def export(web3, start, end, batch, output, continue_=False, waiting=False):
             current_block_index = web3.eth.blockNumber
 
         # 递归创建 receipts 目录
-        dir_receipts = os.path.join(output, 'receipts', f'start_block={start_block:08d}/end_block={end_block:08d}')
+        dir_receipts = os.path.join(output, 'receipts')
         os.makedirs(dir_receipts, exist_ok=True)
         path_receipts = os.path.join(dir_receipts, f'receipts_{start_block:08d}_{end_block:08d}.csv')
         # 递归创建 contracts 目录
-        dir_contracts = os.path.join(output, 'contracts', f'start_block={start_block:08d}/end_block={end_block:08d}')
+        dir_contracts = os.path.join(output, 'contracts')
         os.makedirs(dir_contracts, exist_ok=True)
         path_contracts = os.path.join(dir_contracts, f'contracts_{start_block:08d}_{end_block:08d}.csv')
         # 如果设置 continue_=True，且两个文件都处理过了，则不重复处理
