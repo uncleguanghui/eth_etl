@@ -5,10 +5,9 @@
 @Author  : zhangguanghui
 """
 import os
-import time
 import logging
-import pandas as pd
-from util import Web3, get_function_sighashes, is_erc20_contract, is_erc721_contract, to_normalized_address, get_receipt
+from util import Web3, get_function_sig_hashes, is_erc20_contract, is_erc721_contract, to_normalized_address, \
+    export_data, get_receipt, wait_until_reach, get_path
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s')
@@ -31,38 +30,30 @@ def receipt_to_dict(receipt):
 
 def contract_to_dict(web3, contract_addr, block_number):
     bytecode = web3.eth.get_code(contract_addr).hex()
-    function_sighashes = get_function_sighashes(bytecode)
+    function_sig_hashes = get_function_sig_hashes(bytecode)
     return {
         'address': to_normalized_address(contract_addr),
         'bytecode': bytecode,
-        'function_sighashes': ','.join(function_sighashes),
-        'is_erc20': is_erc20_contract(function_sighashes),
-        'is_erc721': is_erc721_contract(function_sighashes),
+        'function_sighashes': ','.join(function_sig_hashes),
+        'is_erc20': is_erc20_contract(function_sig_hashes),
+        'is_erc721': is_erc721_contract(function_sig_hashes),
         'block_number': block_number
     }
 
 
-def export(web3, start, end, batch, output, continue_=False, waiting=False):
+def export(web3, config: dict):
+    start, end = config['start'], config['end']
+    continue_ = config['continue']
+    output, fmt, compression, batch = config['output'], config['format'], config['compression'], config['batch']
+
     for start_block in range(start, end, batch):
         end_block = start_block + batch - 1
+        path_receipts = get_path(output, 'receipts', start_block, end_block)
+        path_contracts = get_path(output, 'contracts', start_block, end_block)
 
         # 等待到达最新区块高度
-        current_block_index = web3.eth.blockNumber
-        while current_block_index < end_block:
-            if not waiting:
-                raise StopIteration(f'待处理区块少于目标值 {batch}，停止处理')
-            logger.info(f'当前区块 {current_block_index}，期望处理 {start_block}~{end_block}，等待 60 秒')
-            time.sleep(60)
-            current_block_index = web3.eth.blockNumber
+        wait_until_reach(web3, start_block, batch)
 
-        # 递归创建 receipts 目录
-        dir_receipts = os.path.join(output, 'receipts')
-        os.makedirs(dir_receipts, exist_ok=True)
-        path_receipts = os.path.join(dir_receipts, f'receipts_{start_block:08d}_{end_block:08d}.csv')
-        # 递归创建 contracts 目录
-        dir_contracts = os.path.join(output, 'contracts')
-        os.makedirs(dir_contracts, exist_ok=True)
-        path_contracts = os.path.join(dir_contracts, f'contracts_{start_block:08d}_{end_block:08d}.csv')
         # 如果设置 continue_=True，且两个文件都处理过了，则不重复处理
         if continue_ and os.path.exists(path_receipts) and os.path.exists(path_contracts):
             logger.info(f'区块 {start_block}~{end_block} 已处理，跳过')
@@ -75,20 +66,16 @@ def export(web3, start, end, batch, output, continue_=False, waiting=False):
 
         # 保存 receipts
         data_receipts = [receipt_to_dict(i) for i in receipts]
-        df_receipts = pd.DataFrame(data_receipts)
-        df_receipts.to_csv(path_receipts, index=False, encoding='utf-8-sig')
-        logger.info(f'receipts -> {path_receipts}')
+        export_data('receipts', data_receipts, path_receipts, fmt, compression)
 
         # 保存 contracts
         data_contracts = [contract_to_dict(web3, i.contractAddress, i.blockNumber)
                           for i in receipts if i.get('contractAddress')]
-        df_contracts = pd.DataFrame(data_contracts)
-        df_contracts.to_csv(path_contracts, index=False, encoding='utf-8-sig')
-        logger.info(f'contracts -> {path_contracts}')
+        export_data('contracts', data_contracts, path_contracts, fmt, compression)
 
 
 if __name__ == '__main__':
     from check_config import conf
 
     w3 = Web3(conf['ipc'])
-    export(w3, conf['start'], conf['end'], conf['batch'], conf['output'], conf['continue'], conf['waiting'])
+    export(w3, conf)

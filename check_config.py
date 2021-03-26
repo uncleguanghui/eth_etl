@@ -26,11 +26,12 @@ def combine_config(c, a):
         'end': a.end,
         # output
         'output': c['output']['path'],
+        'format': c['output']['format'],
+        'compression': None if c['output']['compression'] == 'None' else c['output']['compression'],
         'batch': a.batch or c.getint('output', 'batch'),
         **{key: value for key, value in c['output'].items() if key.startswith('table_name')},
         # action
         'continue': c.getboolean('action', 'continue'),
-        'waiting': c.getboolean('action', 'waiting'),
     }
 
 
@@ -65,6 +66,9 @@ assert Path(path_ipc).exists(), f'config.ini 中的 geth.ipc 文件不存在：{
 dir_output = Path(conf['output'])
 dir_output = dir_output if dir_output.is_absolute() else (Path(__file__).parent / dir_output)
 dir_output.mkdir(exist_ok=True)
+assert conf['format'] in ['csv', 'parquet'], f'不支持自定义格式 {conf["format"]}，仅支持 csv 或 parquet'
+valid_comps = {'snappy', 'gzip', 'brotli', None}
+assert conf['format'] != 'parquet' or conf['compression'] in valid_comps, f'parquet 格式下，压缩方式仅支持 {valid_comps}'
 # 检查区块高度
 assert 0 <= conf['start'] <= conf['end'], '开始或结束区块高度异常'
 assert 0 < conf['batch'] <= 10000, '一个文件中的区块高度不在合理范围 (0, 10000]'

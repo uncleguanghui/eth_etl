@@ -5,10 +5,9 @@
 @Author  : zhangguanghui
 """
 import os
-import time
 import logging
-import pandas as pd
-from util import Web3, get_first_result, ERC20_ABI, TOPIC_TRANSFER, get_logs, to_normalized_address
+from util import Web3, get_first_result, ERC20_ABI, TOPIC_TRANSFER, get_logs, to_normalized_address, export_data, \
+    wait_until_reach, get_path
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s')
@@ -27,23 +26,18 @@ def token_to_dict(web3, token_addr, block_number=None):
     }
 
 
-def export(web3, start, end, batch, output, continue_=False, waiting=False):
+def export(web3, config: dict):
+    start, end = config['start'], config['end']
+    continue_ = config['continue']
+    output, fmt, compression, batch = config['output'], config['format'], config['compression'], config['batch']
+
     for start_block in range(start, end, batch):
         end_block = start_block + batch - 1
+        path_tokens = get_path(output, 'tokens', start_block, end_block)
 
         # 等待到达最新区块高度
-        current_block_index = web3.eth.blockNumber
-        while current_block_index < end_block:
-            if not waiting:
-                raise StopIteration(f'待处理区块少于目标值 {batch}，停止处理')
-            logger.info(f'当前区块 {current_block_index}，期望处理 {start_block}~{end_block}，等待 60 秒')
-            time.sleep(60)
-            current_block_index = web3.eth.blockNumber
+        wait_until_reach(web3, start_block, batch)
 
-        # 递归创建 tokens 目录
-        dir_tokens = os.path.join(output, 'tokens')
-        os.makedirs(dir_tokens, exist_ok=True)
-        path_tokens = os.path.join(dir_tokens, f'tokens_{start_block:08d}_{end_block:08d}.csv')
         # 如果设置 continue_=True，且文件都处理过了，则不重复处理
         if continue_ and os.path.exists(path_tokens):
             logger.info(f'区块 {start_block}~{end_block} 已处理，跳过')
@@ -57,13 +51,11 @@ def export(web3, start, end, batch, output, continue_=False, waiting=False):
 
         # 保存 tokens
         data_tokens = [token_to_dict(web3, token_addr, block_number=None) for token_addr in token_addrs]
-        df_tokens = pd.DataFrame(data_tokens)
-        df_tokens.to_csv(path_tokens, index=False, encoding='utf-8-sig')
-        logger.info(f'tokens -> {path_tokens}')
+        export_data('tokens', data_tokens, path_tokens, fmt, compression)
 
 
 if __name__ == '__main__':
     from check_config import conf
 
     w3 = Web3(conf['ipc'])
-    export(w3, conf['start'], conf['end'], conf['batch'], conf['output'], conf['continue'], conf['waiting'])
+    export(w3, conf)

@@ -5,10 +5,9 @@
 @Author  : zhangguanghui
 """
 import os
-import time
 import logging
-import pandas as pd
-from util import Web3, TOPIC_TRANSFER, get_logs, word_to_address, to_normalized_address
+from util import Web3, TOPIC_TRANSFER, get_logs, word_to_address, to_normalized_address, export_data, \
+    wait_until_reach, get_path
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s')
@@ -40,27 +39,19 @@ def transfer_to_dict(transfer):
     }
 
 
-def export(web3, start, end, batch, output, continue_=False, waiting=False):
+def export(web3, config: dict):
+    start, end = config['start'], config['end']
+    continue_ = config['continue']
+    output, fmt, compression, batch = config['output'], config['format'], config['compression'], config['batch']
+
     for start_block in range(start, end, batch):
         end_block = start_block + batch - 1
+        path_logs = get_path(output, 'logs', start_block, end_block)
+        path_transfers = get_path(output, 'token_transfers', start_block, end_block)
 
         # 等待到达最新区块高度
-        current_block_index = web3.eth.blockNumber
-        while current_block_index < end_block:
-            if not waiting:
-                raise StopIteration(f'待处理区块少于目标值 {batch}，停止处理')
-            logger.info(f'当前区块 {current_block_index}，期望处理 {start_block}~{end_block}，等待 60 秒')
-            time.sleep(60)
-            current_block_index = web3.eth.blockNumber
+        wait_until_reach(web3, start_block, batch)
 
-        # 递归创建 logs 目录
-        dir_logs = os.path.join(output, 'logs')
-        os.makedirs(dir_logs, exist_ok=True)
-        path_logs = os.path.join(dir_logs, f'logs_{start_block:08d}_{end_block:08d}.csv')
-        # 递归创建 token_transfers 目录
-        dir_transfers = os.path.join(output, 'token_transfers')
-        os.makedirs(dir_transfers, exist_ok=True)
-        path_transfers = os.path.join(dir_transfers, f'token_transfers_{start_block:08d}_{end_block:08d}.csv')
         # 如果设置 continue_=True，且两个文件都处理过了，则不重复处理
         if continue_ and os.path.exists(path_logs) and os.path.exists(path_transfers):
             logger.info(f'区块 {start_block}~{end_block} 已处理，跳过')
@@ -73,19 +64,15 @@ def export(web3, start, end, batch, output, continue_=False, waiting=False):
 
         # 保存 logs
         data_logs = [log_to_dict(i) for i in logs]
-        df_logs = pd.DataFrame(data_logs)
-        df_logs.to_csv(path_logs, index=False, encoding='utf-8-sig')
-        logger.info(f'logs -> {path_logs}')
+        export_data('logs', data_logs, path_logs, fmt, compression)
 
         # 保存 token_transfers
         data_transfers = [transfer_to_dict(i) for i in transfers]
-        df_transfers = pd.DataFrame(data_transfers)
-        df_transfers.to_csv(path_transfers, index=False, encoding='utf-8-sig')
-        logger.info(f'token_transfers -> {path_transfers}')
+        export_data('token_transfers', data_transfers, path_transfers, fmt, compression)
 
 
 if __name__ == '__main__':
     from check_config import conf
 
     w3 = Web3(conf['ipc'])
-    export(w3, conf['start'], conf['end'], conf['batch'], conf['output'], conf['continue'], conf['waiting'])
+    export(w3, conf)

@@ -5,10 +5,8 @@
 @Author  : zhangguanghui
 """
 import os
-import time
 import logging
-import pandas as pd
-from util import Web3, to_normalized_address
+from util import Web3, to_normalized_address, export_data, wait_until_reach, get_path
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s')
@@ -55,27 +53,19 @@ def tx_to_dict(transaction, block_timestamp):
     }
 
 
-def export(web3, start, end, batch, output, continue_=False, waiting=False):
+def export(web3, config: dict):
+    start, end = config['start'], config['end']
+    continue_ = config['continue']
+    output, fmt, compression, batch = config['output'], config['format'], config['compression'], config['batch']
+
     for start_block in range(start, end, batch):
         end_block = start_block + batch - 1
+        path_blocks = get_path(output, 'blocks', start_block, end_block)
+        path_txs = get_path(output, 'transactions', start_block, end_block)
 
         # 等待到达最新区块高度
-        current_block_index = web3.eth.blockNumber
-        while current_block_index < end_block:
-            if not waiting:
-                raise StopIteration(f'待处理区块少于目标值 {batch}，停止处理')
-            logger.info(f'最新区块 {current_block_index}，期望处理 {start_block}~{end_block}，等待 60 秒')
-            time.sleep(60)
-            current_block_index = web3.eth.blockNumber
+        wait_until_reach(web3, start_block, batch)
 
-        # 递归创建 blocks 目录
-        dir_blocks = os.path.join(output, 'blocks')
-        os.makedirs(dir_blocks, exist_ok=True)
-        path_blocks = os.path.join(dir_blocks, f'blocks_{start_block:08d}_{end_block:08d}.csv')
-        # 递归创建 transactions 目录
-        dir_txs = os.path.join(output, 'transactions')
-        os.makedirs(dir_txs, exist_ok=True)
-        path_txs = os.path.join(dir_txs, f'transactions_{start_block:08d}_{end_block:08d}.csv')
         # 如果设置 continue_=True，且文件都处理过了，则不重复处理
         if continue_ and os.path.exists(path_blocks) and os.path.exists(path_txs):
             logger.info(f'区块 {start_block}~{end_block} 已处理，跳过')
@@ -86,19 +76,15 @@ def export(web3, start, end, batch, output, continue_=False, waiting=False):
 
         # 保存 blocks
         data_blocks = [block_to_dict(i) for i in blocks]
-        df_blocks = pd.DataFrame(data_blocks)
-        df_blocks.to_csv(path_blocks, index=False, encoding='utf-8-sig')
-        logger.info(f'blocks -> {path_blocks}')
+        export_data('blocks', data_blocks, path_blocks, fmt, compression)
 
         # 保存 transactions
         data_txs = sum([[tx_to_dict(j, i.get('timestamp')) for j in i.transactions] for i in blocks], [])
-        df_txs = pd.DataFrame(data_txs)
-        df_txs.to_csv(path_txs, index=False, encoding='utf-8-sig')
-        logger.info(f'transactions -> {path_txs}')
+        export_data('transactions', data_txs, path_txs, fmt, compression)
 
 
 if __name__ == '__main__':
     from check_config import conf
 
     w3 = Web3(conf['ipc'])
-    export(w3, conf['start'], conf['end'], conf['batch'], conf['output'], conf['continue'], conf['waiting'])
+    export(w3, conf)

@@ -5,6 +5,10 @@ ipc = /.../geth.ipc
 [output]
 # 输出文件的路径（绝对路径或相对路径）
 path = output
+# 输出的文件格式，目前仅支持 csv 和 parquet
+format = csv
+# 当 format=parquet 时，composition 参数才有效，用于指定压缩格式，默认为 None 即不压缩，支持：snappy, gzip, brotli, None
+compression = None
 # 7 张表的文件名
 table_name_blocks = blocks
 table_name_logs = logs
@@ -19,5 +23,3 @@ batch = 1000
 [action]
 # 是否继续输出（在上一次结果的基础上）
 continue = True
-# 当区块高度没有达到结束高度时，是否等待
-waiting = True

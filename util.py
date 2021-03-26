@@ -9,6 +9,7 @@ import web3
 import json
 import time
 import logging
+import pandas as pd
 from web3.middleware import geth_poa_middleware
 from web3.exceptions import BadFunctionCallOutput
 from ethereum_dasm.evmdasm import EvmCode, Contract
@@ -51,6 +52,34 @@ class Web3:
         if not self.w3.isConnected():
             self.update()
         return self.w3.eth
+
+
+def export_data(table, data: list, path, fmt, compression=None):
+    df = pd.DataFrame(data)
+    if fmt == 'csv':
+        df.to_csv(path, index=False, encoding='utf-8-sig')
+    elif fmt == 'parquet':
+        df.to_parquet(path, index=False, compression=compression)
+    else:
+        raise TypeError(f'不支持的数据格式 {fmt}')
+    logger.info(f'{table} -> {path}')
+
+
+def wait_until_reach(w3, start_block: int, batch: int):
+    # 等待到达最新区块高度
+    current_block_index = w3.eth.blockNumber
+    while current_block_index < start_block + batch:
+        logger.info(f'待开始区块 {start_block}，当前最新区块 {current_block_index}，差值小于 {batch}，等待 60 秒')
+        time.sleep(60)
+        current_block_index = w3.eth.blockNumber
+
+
+def get_path(output, table, start_block, end_block):
+    # 创建目录
+    dir_blocks = os.path.join(output, table)
+    os.makedirs(dir_blocks, exist_ok=True)
+    path_blocks = os.path.join(dir_blocks, f'{table}_{start_block:08d}_{end_block:08d}.csv')
+    return path_blocks
 
 
 def to_normalized_address(address):
@@ -143,24 +172,24 @@ def get_first_result(*funcs):
     return None
 
 
-def get_function_sighash(signature):
+def get_function_sig_hash(signature):
     return '0x' + function_signature_to_4byte_selector(signature).hex()
 
 
 class ContractWrapper:
-    def __init__(self, sighashes):
-        self.sighashes = sighashes
+    def __init__(self, sig_hashes):
+        self.sig_hashes = sig_hashes
 
     def implements(self, function_signature):
-        sighash = get_function_sighash(function_signature)
-        return sighash in self.sighashes
+        sig_hash = get_function_sig_hash(function_signature)
+        return sig_hash in self.sig_hashes
 
     def implements_any_of(self, *function_signatures):
         return any(self.implements(function_signature) for function_signature in function_signatures)
 
 
-def is_erc20_contract(function_sighashes):
-    c = ContractWrapper(function_sighashes)
+def is_erc20_contract(function_sig_hashes):
+    c: ContractWrapper = ContractWrapper(function_sig_hashes)
     return c.implements('totalSupply()') and \
            c.implements('balanceOf(address)') and \
            c.implements('transfer(address,uint256)') and \
@@ -169,8 +198,8 @@ def is_erc20_contract(function_sighashes):
            c.implements('allowance(address,address)')
 
 
-def is_erc721_contract(function_sighashes):
-    c = ContractWrapper(function_sighashes)
+def is_erc721_contract(function_sig_hashes):
+    c = ContractWrapper(function_sig_hashes)
     return c.implements('balanceOf(address)') and \
            c.implements('ownerOf(uint256)') and \
            c.implements_any_of('transfer(address,uint256)', 'transferFrom(address,address,uint256)') and \
@@ -186,7 +215,7 @@ def clean_bytecode(bytecode):
         return bytecode
 
 
-def get_function_sighashes(bytecode):
+def get_function_sig_hashes(bytecode):
     bytecode = clean_bytecode(bytecode)
     if bytecode is not None:
         evm_code = EvmCode(contract=Contract(bytecode=bytecode), static_analysis=False, dynamic_analysis=False)
