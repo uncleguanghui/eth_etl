@@ -25,6 +25,7 @@ TOPIC_TRANSFER = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523
 class Web3:
     def __init__(self, ipc):
         self.w3 = None
+        self.timeout = 600
         self.ipc = ipc
         assert os.path.exists(self.ipc), 'geth.ipc 路径 ' + self.ipc + ' 不存在'
         self.update()
@@ -35,7 +36,7 @@ class Web3:
         error_info = ''
         while retry_count < max_retry_count:
             try:
-                self.w3 = web3.Web3(web3.Web3.IPCProvider(self.ipc, timeout=60))
+                self.w3 = web3.Web3(web3.Web3.IPCProvider(self.ipc, timeout=self.timeout))
                 self.w3.middleware_onion.inject(geth_poa_middleware, layer=0)  # 注入 poa 兼容中间件到最内层
                 assert self.w3.isConnected()
                 return

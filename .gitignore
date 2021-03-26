@@ -86,3 +86,6 @@ pip-wheel-metadata/
 *.ipynb
 
 config.ini
+
+pid.txt
+kill.sh

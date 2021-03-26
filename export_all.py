@@ -20,13 +20,17 @@ def func(target, *args):
     time.sleep(random.random())
     with open('pid.txt', 'a') as f:
         f.write('=.' * 20 + '\n')
-        f.write(f'{target.__name__}({", ".join([str(i) for i in args])})\n')
+        f.write(f'{target.__module__}({", ".join([str(i) for i in args])})\n')
         f.write(f'pid: {os.getpid()}\n')
     # 运行函数
     target(*args)
 
 
 if __name__ == '__main__':
+    # 生成杀掉进程的脚本
+    with open('kill.sh', 'w') as f:
+        f.write(f'kill -9 {os.getpid()}')
+
     w3 = Web3(conf['ipc'])
 
     ps = []
