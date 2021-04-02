@@ -46,8 +46,8 @@ def export(web3, config: dict):
 
     for start_block in range(start, end, batch):
         end_block = start_block + batch - 1
-        path_logs = get_path(output, 'logs', start_block, end_block)
-        path_transfers = get_path(output, 'token_transfers', start_block, end_block)
+        path_logs = get_path(output, 'logs', start_block, end_block, fmt)
+        path_transfers = get_path(output, 'token_transfers', start_block, end_block, fmt)
 
         # 等待到达最新区块高度
         wait_until_reach(web3, start_block, batch)

@@ -48,8 +48,8 @@ def export(web3, config: dict):
 
     for start_block in range(start, end, batch):
         end_block = start_block + batch - 1
-        path_receipts = get_path(output, 'receipts', start_block, end_block)
-        path_contracts = get_path(output, 'contracts', start_block, end_block)
+        path_receipts = get_path(output, 'receipts', start_block, end_block, fmt)
+        path_contracts = get_path(output, 'contracts', start_block, end_block, fmt)
 
         # 等待到达最新区块高度
         wait_until_reach(web3, start_block, batch)

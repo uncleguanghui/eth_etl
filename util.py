@@ -75,11 +75,17 @@ def wait_until_reach(w3, start_block: int, batch: int):
         current_block_index = w3.eth.blockNumber
 
 
-def get_path(output, table, start_block, end_block):
+def get_path(output, table, start_block, end_block, fmt):
     # 创建目录
     dir_blocks = os.path.join(output, table)
     os.makedirs(dir_blocks, exist_ok=True)
-    path_blocks = os.path.join(dir_blocks, f'{table}_{start_block:08d}_{end_block:08d}.csv')
+    if fmt == 'csv':
+        suffix = '.csv'
+    elif fmt == 'csv':
+        suffix = '.parquet'
+    else:
+        raise ValueError('错误的格式')
+    path_blocks = os.path.join(dir_blocks, f'{table}_{start_block:08d}_{end_block:08d}{suffix}')
     return path_blocks
 
 
