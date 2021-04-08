@@ -81,7 +81,7 @@ def get_path(output, table, start_block, end_block, fmt):
     os.makedirs(dir_blocks, exist_ok=True)
     if fmt == 'csv':
         suffix = '.csv'
-    elif fmt == 'csv':
+    elif fmt == 'parquet':
         suffix = '.parquet'
     else:
         raise ValueError('错误的格式')
