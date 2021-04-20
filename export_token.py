@@ -21,7 +21,7 @@ def token_to_dict(web3, token_addr, block_number=None):
         'symbol': get_first_result(contract.functions.symbol(), contract.functions.SYMBOL()),
         'name': get_first_result(contract.functions.name(), contract.functions.NAME()),
         'decimals': get_first_result(contract.functions.decimals(), contract.functions.DECIMALS()),
-        'total_supply': get_first_result(contract.functions.totalSupply()),
+        'total_supply': str(get_first_result(contract.functions.totalSupply())),
         'block_number': block_number
     }
 
